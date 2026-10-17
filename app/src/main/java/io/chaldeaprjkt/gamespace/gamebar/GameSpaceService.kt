@@ -73,10 +73,21 @@ class GameSpaceService : Hilt_GameSpaceService() {
         when (intent?.action) {
             "game_start" -> {
                 intent.getStringExtra("package_name")?.let {
+                    Log.d(TAG, "Game started: $it")
                     SessionService.start(applicationContext, it)
+                    Process.setThreadPriority(Process.THREAD_PRIORITY_DISPLAY)
+                    Process.setThreadGroupAndCpuset(Process.myTid(), Process.THREAD_GROUP_SYSTEM)
+                    Process.setProcessGroup(Process.myPid(), Process.THREAD_GROUP_SYSTEM)
+                    gameOptimization.optimizeGameLaunch(it)
                 }
             }
-            "game_stop" -> SessionService.stop(applicationContext)
+            "game_stop" -> {
+                Log.d(TAG, "Game left")
+                SessionService.stop(applicationContext)
+                Process.setThreadPriority(Process.THREAD_PRIORITY_BACKGROUND)
+                Process.setThreadGroupAndCpuset(Process.myTid(), Process.THREAD_GROUP_BACKGROUND)
+                Process.setProcessGroup(Process.myPid(), Process.THREAD_GROUP_BACKGROUND)
+            }
         }
         return START_STICKY
     }
