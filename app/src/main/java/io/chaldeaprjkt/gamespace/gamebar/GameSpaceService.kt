@@ -19,11 +19,7 @@ import android.app.Service
 import android.content.Intent
 import android.os.IBinder
 import android.os.Process
-import android.os.RemoteException
-import android.os.ServiceManager
 import android.util.Log
-import com.android.internal.app.IGameSpaceCallback
-import com.android.internal.app.IGameSpaceService
 
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -36,34 +32,12 @@ class GameSpaceService : Hilt_GameSpaceService() {
 
     private val TAG = "GameSpaceService"
 
-    private var gameSpaceService: IGameSpaceService? = null
-
     @Inject
     lateinit var gameOptimization: GameOptimizationManager
 
-    private val callback = object : IGameSpaceCallback.Stub() {
-        override fun onGameStart(packageName: String) {
-            Log.d(TAG, "Game started: $packageName")
-            SessionService.start(applicationContext, packageName)
-            Process.setThreadPriority(Process.THREAD_PRIORITY_DISPLAY)
-            Process.setThreadGroupAndCpuset(Process.myTid(), Process.THREAD_GROUP_SYSTEM)
-            Process.setProcessGroup(Process.myPid(), Process.THREAD_GROUP_SYSTEM)
-            gameOptimization.optimizeGameLaunch(packageName)
-        }
-
-        override fun onGameLeave() {
-            Log.d(TAG, "Game left")
-            SessionService.stop(applicationContext)
-            Process.setThreadPriority(Process.THREAD_PRIORITY_BACKGROUND)
-            Process.setThreadGroupAndCpuset(Process.myTid(), Process.THREAD_GROUP_BACKGROUND)
-            Process.setProcessGroup(Process.myPid(), Process.THREAD_GROUP_BACKGROUND)
-        }
-    }
-
     override fun onCreate() {
         super.onCreate()
-        Log.d(TAG, "Service created, registering callback...")
-        registerCallback()
+        Log.d(TAG, "Service created")
         Process.setThreadPriority(Process.THREAD_PRIORITY_BACKGROUND)
         Process.setThreadGroupAndCpuset(Process.myTid(), Process.THREAD_GROUP_BACKGROUND)
         Process.setProcessGroup(Process.myPid(), Process.THREAD_GROUP_BACKGROUND)
@@ -73,46 +47,23 @@ class GameSpaceService : Hilt_GameSpaceService() {
         when (intent?.action) {
             "game_start" -> {
                 intent.getStringExtra("package_name")?.let {
+                    Log.d(TAG, "Game started: $it")
                     SessionService.start(applicationContext, it)
+                    Process.setThreadPriority(Process.THREAD_PRIORITY_DISPLAY)
+                    Process.setThreadGroupAndCpuset(Process.myTid(), Process.THREAD_GROUP_SYSTEM)
+                    Process.setProcessGroup(Process.myPid(), Process.THREAD_GROUP_SYSTEM)
+                    gameOptimization.optimizeGameLaunch(it)
                 }
             }
-            "game_stop" -> SessionService.stop(applicationContext)
+            "game_stop" -> {
+                Log.d(TAG, "Game left")
+                SessionService.stop(applicationContext)
+                Process.setThreadPriority(Process.THREAD_PRIORITY_BACKGROUND)
+                Process.setThreadGroupAndCpuset(Process.myTid(), Process.THREAD_GROUP_BACKGROUND)
+                Process.setProcessGroup(Process.myPid(), Process.THREAD_GROUP_BACKGROUND)
+            }
         }
         return START_STICKY
-    }
-
-    private fun registerCallback() {
-        gameSpaceService = IGameSpaceService.Stub.asInterface(
-            ServiceManager.getService("game_space")
-        )
-
-        if (gameSpaceService != null) {
-            try {
-                gameSpaceService?.registerCallback(callback)
-                Log.i(TAG, "Callback registered successfully")
-            } catch (e: RemoteException) {
-                Log.e(TAG, "Failed to register callback", e)
-            }
-        } else {
-            Log.e(TAG, "game_space service not available")
-        }
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        unregisterCallback()
-    }
-
-    private fun unregisterCallback() {
-        if (gameSpaceService != null) {
-            try {
-                gameSpaceService?.unregisterCallback(callback)
-                Log.i(TAG, "Callback unregistered")
-            } catch (e: RemoteException) {
-                Log.w(TAG, "Failed to unregister callback", e)
-            }
-            gameSpaceService = null
-        }
     }
 
     override fun onBind(intent: Intent?): IBinder? = null

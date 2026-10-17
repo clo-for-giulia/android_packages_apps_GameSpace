@@ -102,6 +102,16 @@
         </service>
 
         <receiver
+            android:name=".gamebar.GameBroadcastReceiver"
+            android:permission="android.permission.MANAGE_GAME_MODE"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="io.chaldeaprjkt.gamespace.action.GAME_START" />
+                <action android:name="io.chaldeaprjkt.gamespace.action.GAME_STOP" />
+            </intent-filter>
+        </receiver>
+
+        <receiver
             android:name=".BootCompletedReceiver"
             android:exported="true"
             android:directBootAware="true">
