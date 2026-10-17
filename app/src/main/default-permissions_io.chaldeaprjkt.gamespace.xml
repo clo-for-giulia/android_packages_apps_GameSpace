@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+     Copyright (C) 2026 Paranoid Android
+     SPDX-License-Identifier: Apache-2.0
+-->
+<exceptions>
+    <exception package="io.chaldeaprjkt.gamespace">
+        <permission name="android.permission.SYSTEM_ALERT_WINDOW" fixed="false" />
+    </exception>
+</exceptions>

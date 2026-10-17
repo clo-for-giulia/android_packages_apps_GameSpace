@@ -52,7 +52,8 @@ android_app {
     ],
 
     required: [
-        "privapp_whitelist_io.chaldeaprjkt.gamespace.xml"
+        "privapp_whitelist_io.chaldeaprjkt.gamespace.xml",
+        "default-permissions_io.chaldeaprjkt.gamespace.xml",
     ],
 }
 
@@ -63,3 +64,12 @@ prebuilt_etc_xml {
     filename_from_src: true,
     sub_dir: "permissions",
 }
+
+prebuilt_etc_xml {
+    name: "default-permissions_io.chaldeaprjkt.gamespace.xml",
+    src: "default-permissions_io.chaldeaprjkt.gamespace.xml",
+    system_ext_specific: true,
+    filename_from_src: true,
+    sub_dir: "default-permissions",
+}
+
